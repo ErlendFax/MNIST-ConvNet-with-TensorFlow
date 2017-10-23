@@ -1,5 +1,6 @@
 import tensorflow as tf
 import numpy as np
+import math
 #import matplotlib.pyplot as plt
 
 import matplotlib
@@ -77,7 +78,7 @@ def plot_layer_output(layer_output, image):
     feed_dict = {x: [image]}
 
     # Retrieve the output of the layer after inputting this image.
-    values = session.run(layer_output, feed_dict=feed_dict)
+    values = sess.run(layer_output, feed_dict=feed_dict)
 
     # Get the lowest and highest values.
     # This is used to correct the colour intensity across
@@ -93,7 +94,7 @@ def plot_layer_output(layer_output, image):
     num_grids = math.ceil(math.sqrt(num_images))
 
     # Create figure with a grid of sub-plots.
-    fig, axes = plt.subplots(num_grids, num_grids)
+    fig, axes = plt.subplots(int(num_grids), int(num_grids))
 
     # Plot all the filter-weights.
     for i, ax in enumerate(axes.flat):
@@ -112,7 +113,7 @@ def plot_layer_output(layer_output, image):
 
     # Ensure the plot is shown correctly with multiple plots
     # in a single Notebook cell.
-    plt.show(blok=False)
+    plt.show(block=False)
 
 def get_layer_output(layer_name):
     # The name of the last operation of the convolutional layer.
