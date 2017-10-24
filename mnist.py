@@ -180,11 +180,11 @@ if __name__ == "__main__":
 
     plot_images(mnist.test.images[:9], cls_true=mnist.test.labels[:9], smooth=False) # Print input data
 
-    print "-----------------------------------------------"
-    print [n.name for n in tf.get_default_graph().as_graph_def().node]
-    print "-----------------------------------------------"
+    #print "-----------------------------------------------"
+    #print [n.name for n in tf.get_default_graph().as_graph_def().node]
+    #print "-----------------------------------------------"
 
-    for i in range(20):
+    for i in range(300):
         batch_xs, batch_ys = mnist.train.next_batch(128)
         sess.run(train, feed_dict={x: batch_xs, y: batch_ys, keep_prob: 0.9})
         if (i % 10 == 0):
