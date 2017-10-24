@@ -3,8 +3,8 @@ import numpy as np
 import math
 #import matplotlib.pyplot as plt
 
-import matplotlib
-matplotlib.use('TkAgg')
+#import matplotlib
+#matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 
 from tensorflow.examples.tutorials.mnist import input_data
@@ -67,7 +67,6 @@ def plot_images(images, cls_true, cls_pred=None, smooth=True):
         ax.set_yticks([])
 
 
-
 def plot_layer_output(layer_output, image):
     # Assume layer_output is a 4-dim tensor
     # e.g. output_conv1 or output_conv2.
@@ -118,15 +117,12 @@ def plot_layer_output(layer_output, image):
 def get_layer_output(layer_name):
     # The name of the last operation of the convolutional layer.
     # This assumes you are using Relu as the activation-function.
-    tensor_name = "gradients/" + layer_name + "/Elu:0"
-
-    tensor_name = "layer_conv1:0"
+    #tensor_name = "gradients/" + layer_name + "/Elu:0"
 
     # Get the tensor with this name.
-    tensor = tf.get_default_graph().get_tensor_by_name(tensor_name)
+    tensor = tf.get_default_graph().get_tensor_by_name(layer_name)
 
     return tensor
-
 
 
 if __name__ == "__main__":
@@ -148,7 +144,6 @@ if __name__ == "__main__":
     elu1 = tf.nn.elu(h_conv1)
     pool1 = maxpool2d(elu1, 2)
 
-    print pool1.get_shape(), "<--- Her!"
 
     # conv2
     W_conv2 = weight_variable([5,5,20,256])
@@ -166,15 +161,11 @@ if __name__ == "__main__":
     fc1 = tf.contrib.layers.flatten(pool1)
     fc1 = tf.layers.dense(fc1, 1024)
 
-    #print fc1.get_shape(), "<--- Her!"
-
     elu2 = tf.nn.elu(fc1)
-
-    #print elu2.get_shape(), "<--- Her!"
 
     output = tf.layers.dense(elu2, 10) # Output
 
-    #print output.get_shape(), "<--- Her!"
+    print "OUTPUT: ", output
 
     prediction = tf.nn.softmax(output) # Format for loss check
 
@@ -189,16 +180,9 @@ if __name__ == "__main__":
 
     plot_images(mnist.test.images[:9], cls_true=mnist.test.labels[:9], smooth=False) # Print input data
 
-
-    print "Stek1"
+    print "-----------------------------------------------"
     print [n.name for n in tf.get_default_graph().as_graph_def().node]
-    print "Stek2"
-
-    #for i in range(10):
-    #    print "Check it: ", tf.get_default_graph().
-
-    #print [m.values() for m in op][1]
-
+    print "-----------------------------------------------"
 
     for i in range(20):
         batch_xs, batch_ys = mnist.train.next_batch(128)
@@ -214,8 +198,21 @@ if __name__ == "__main__":
 
     image = mnist.test.images[0]
 
-    output_conv1 = get_layer_output(layer_name='layer_conv1')
+    output_conv1 = get_layer_output(layer_name="layer_conv1:0")
     plot_layer_output(output_conv1, image)
+
+    output_conv1 = get_layer_output(layer_name="MaxPool:0")
+    plot_layer_output(output_conv1, image)
+
+    output_conv1 = get_layer_output(layer_name="layer_conv2:0")
+    plot_layer_output(output_conv1, image)
+
+    #output_conv1 = get_layer_output(layer_name="Elu_3:0")
+    #plot_layer_output(output_conv1, image)
+
+    #output_conv1 = get_layer_output(layer_name="Elu_4:0")
+    #plot_layer_output(output_conv1, image)
 
     plt.ion()
     plt.show()
+    raw_input("Press Enter to continue...")
