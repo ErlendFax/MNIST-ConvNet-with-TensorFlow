@@ -46,7 +46,7 @@ def plot_images(images, cls_true, cls_pred=None, smooth=True):
         arr = images
         arr = arr[i,:]
         two_d = (np.reshape(arr, (28, 28))* 255).astype(np.uint8)
-        ax.imshow(two_d, interpolation=interpolation ,cmap=plt.get_cmap('gray'))
+        ax.imshow(two_d, interpolation=interpolation , cmap=plt.get_cmap('gray')) # cmap='binary'
 
         cls_true_name = cls_true[i]
 
@@ -92,8 +92,10 @@ def plot_layer_output(layer_output, image):
     # Rounded-up, square-root of the number of filters.
     num_grids = math.ceil(math.sqrt(num_images))
 
+    cols =  num_images / int(num_grids)
+
     # Create figure with a grid of sub-plots.
-    fig, axes = plt.subplots(int(num_grids), int(num_grids))
+    fig, axes = plt.subplots(int(num_grids), cols)
 
     # Plot all the filter-weights.
     for i, ax in enumerate(axes.flat):
@@ -104,7 +106,7 @@ def plot_layer_output(layer_output, image):
 
             # Plot image.
             ax.imshow(img, vmin=values_min, vmax=values_max,
-                      interpolation='nearest', cmap='binary')
+                      interpolation='nearest', cmap=plt.get_cmap('gray'))
 
         # Remove ticks from the plot.
         ax.set_xticks([])
@@ -113,6 +115,26 @@ def plot_layer_output(layer_output, image):
     # Ensure the plot is shown correctly with multiple plots
     # in a single Notebook cell.
     plt.show(block=False)
+
+def plot_img(image):
+
+    print image.shape, "<............."
+    #arr = image
+    #arr = arr[0,:]
+    two_d = (np.reshape(image, (28, 28))* 255).astype(np.uint8)
+    plt.imshow(two_d, interpolation='nearest' , cmap=plt.get_cmap('gray'))
+
+
+    #plt.imshow(image, interpolation='nearest', cmap='binary')
+
+        # Remove ticks from the plot.
+    #plt.set_xticks([])
+    #plt.set_yticks([])
+
+    # Ensure the plot is shown correctly with multiple plots
+    # in a single Notebook cell.
+    plt.show(block=False)
+
 
 def get_layer_output(layer_name):
     # The name of the last operation of the convolutional layer.
@@ -178,13 +200,15 @@ if __name__ == "__main__":
 
     sess.run(tf.global_variables_initializer())
 
-    plot_images(mnist.test.images[:9], cls_true=mnist.test.labels[:9], smooth=False) # Print input data
+    #plot_images(mnist.test.images[0], cls_true=mnist.test.labels[0], smooth=False) # Print input data
 
-    #print "-----------------------------------------------"
-    #print [n.name for n in tf.get_default_graph().as_graph_def().node]
-    #print "-----------------------------------------------"
+    plot_img(mnist.test.images[0]) # Print input data
 
-    for i in range(300):
+    print "-----------------------------------------------"
+    print [n.name for n in tf.get_default_graph().as_graph_def().node]
+    print "-----------------------------------------------"
+
+    for i in range(40):
         batch_xs, batch_ys = mnist.train.next_batch(128)
         sess.run(train, feed_dict={x: batch_xs, y: batch_ys, keep_prob: 0.9})
         if (i % 10 == 0):
@@ -207,11 +231,18 @@ if __name__ == "__main__":
     output_conv1 = get_layer_output(layer_name="layer_conv2:0")
     plot_layer_output(output_conv1, image)
 
-    #output_conv1 = get_layer_output(layer_name="Elu_3:0")
+    #output_conv1 = get_layer_output(layer_name="MaxPool_1:0")
     #plot_layer_output(output_conv1, image)
 
-    #output_conv1 = get_layer_output(layer_name="Elu_4:0")
+    #output_conv1 = get_layer_output(layer_name="dense_1:0")
     #plot_layer_output(output_conv1, image)
+
+    #output_conv1 = get_layer_output(layer_name="dense_2:0")
+    #plot_layer_output(output_conv1, image)
+
+    #output_conv1 = get_layer_output(layer_name="Softmax:0")
+    #plot_layer_output(output_conv1, image)
+
 
     plt.ion()
     plt.show()
