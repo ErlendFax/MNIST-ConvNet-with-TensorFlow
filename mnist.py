@@ -256,7 +256,7 @@ if __name__ == "__main__":
     #plot_images(mnist.test.images[0], cls_true=mnist.test.labels[0], smooth=False) # Print input data
 
     plt.ioff()
-    plot_img(mnist.test.images[0]) # Print input data
+    #plot_img(mnist.test.images[0]) # Print input data
 
     print "-----------------------------------------------"
     print [n.name for n in tf.get_default_graph().as_graph_def().node]
@@ -303,12 +303,13 @@ if __name__ == "__main__":
 
     #getActivations(h_conv1, image)
 
-    getActivations(h_conv2, image)
+    #getActivations(h_conv2, image)
 
     #getActivations(drop1, image)
 
     #getActivations(pool2, image)
 
+    getActivations(output, image)
 
     plt.ion()
     plt.show()
