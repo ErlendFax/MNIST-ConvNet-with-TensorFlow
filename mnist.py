@@ -22,6 +22,65 @@ def bias_variabel(shape):
 def maxpool2d(x, k=2):
     return tf.nn.max_pool(x, ksize=[1, k, k, 1], strides=[1, k, k, 1], padding='SAME')
 
+def getActivations(layer,stimuli):
+    units = sess.run(layer,feed_dict={x:np.reshape(stimuli,[1,784],order='F'),keep_prob:1.0})
+    plotNNFilter(layer, units)
+
+def plotNNFilter(layer, units):
+
+	##
+
+    ##num_images = values.shape[3]
+
+    # Number of grid-cells to plot.
+    # Rounded-up, square-root of the number of filters.
+    ##num_grids = math.ceil(math.sqrt(num_images))
+
+    ##cols =  num_images / int(num_grids)
+
+    # Create figure with a grid of sub-plots.
+    ##fig, axes = plt.subplots(int(num_grids), cols)
+
+    # Plot all the filter-weights.
+    ##for i, ax in enumerate(axes.flat):
+        # Only plot the valid image-channels.
+    #    if i<num_images:
+            # Get the images for the i'th output channel.
+    #        img = values[0, :, :, i]
+
+            # Plot image.
+    #        ax.imshow(img, vmin=values_min, vmax=values_max,
+    #                  interpolation='nearest', cmap=plt.get_cmap('gray'))
+
+    ##
+
+    filters = units.shape[3]
+    plt.figure() # par:
+    n_columns = 6
+    print "STEEEEEk:", filters
+
+    #n_rows = math.ceil(math.sqrt(filters))
+    n_rows = math.ceil(filters / n_columns) + 1
+    #cols =  filters / int(n_rows)
+
+
+
+    for i in range(filters):
+        #print filters, cols, int(n_rows),i, "...................................."
+        ax = plt.subplot(n_rows, n_columns ,i+1)
+        #plt.title('Filter ' + str(i))
+        ax.tick_params(axis=u'both', which=u'both',length=0)
+        ax.set_yticklabels([])
+        ax.set_xticklabels([])
+
+        plt.imshow(units[0,:,:,i], interpolation="nearest", cmap="gray")
+
+
+    plt.suptitle(str(layer), fontsize=8, fontweight='bold')
+
+    plt.show(block=False)
+
+
 def plot_images(images, cls_true, cls_pred=None, smooth=True):
 
     assert len(images) == len(cls_true) == 9
@@ -118,12 +177,10 @@ def plot_layer_output(layer_output, image):
 
 def plot_img(image):
 
-    print image.shape, "<............."
-    #arr = image
-    #arr = arr[0,:]
     two_d = (np.reshape(image, (28, 28))* 255).astype(np.uint8)
     plt.imshow(two_d, interpolation='nearest' , cmap=plt.get_cmap('gray'))
 
+    plt.tick_params(axis=u'both', which=u'both',length=0)
 
     #plt.imshow(image, interpolation='nearest', cmap='binary')
 
@@ -137,11 +194,7 @@ def plot_img(image):
 
 
 def get_layer_output(layer_name):
-    # The name of the last operation of the convolutional layer.
-    # This assumes you are using Relu as the activation-function.
-    #tensor_name = "gradients/" + layer_name + "/Elu:0"
 
-    # Get the tensor with this name.
     tensor = tf.get_default_graph().get_tensor_by_name(layer_name)
 
     return tensor
@@ -168,8 +221,8 @@ if __name__ == "__main__":
 
 
     # conv2
-    W_conv2 = weight_variable([5,5,20,256])
-    b_conv2 = bias_variabel([256])
+    W_conv2 = weight_variable([5,5,20,32])
+    b_conv2 = bias_variabel([32])
     h_conv2 = tf.nn.elu(conv2d(h_conv1, W_conv2, s=1,name='layer_conv2') + b_conv2)
 
     # drop1
@@ -178,12 +231,12 @@ if __name__ == "__main__":
     # elu1
     elu1 = tf.nn.elu(drop1)
 
-    pool1 = maxpool2d(elu1, 2)
+    pool2 = maxpool2d(elu1, 2)
 
-    fc1 = tf.contrib.layers.flatten(pool1)
-    fc1 = tf.layers.dense(fc1, 1024)
+    fc1 = tf.contrib.layers.flatten(pool2)
+    den = tf.layers.dense(fc1, 1024)
 
-    elu2 = tf.nn.elu(fc1)
+    elu2 = tf.nn.elu(den)
 
     output = tf.layers.dense(elu2, 10) # Output
 
@@ -202,6 +255,7 @@ if __name__ == "__main__":
 
     #plot_images(mnist.test.images[0], cls_true=mnist.test.labels[0], smooth=False) # Print input data
 
+    plt.ioff()
     plot_img(mnist.test.images[0]) # Print input data
 
     print "-----------------------------------------------"
@@ -222,14 +276,14 @@ if __name__ == "__main__":
 
     image = mnist.test.images[0]
 
-    output_conv1 = get_layer_output(layer_name="layer_conv1:0")
-    plot_layer_output(output_conv1, image)
+    #output_conv1 = get_layer_output(layer_name="layer_conv1:0")
+    #plot_layer_output(output_conv1, image)
 
-    output_conv1 = get_layer_output(layer_name="MaxPool:0")
-    plot_layer_output(output_conv1, image)
+    #output_conv1 = get_layer_output(layer_name="MaxPool:0")
+    #plot_layer_output(output_conv1, image)
 
-    output_conv1 = get_layer_output(layer_name="layer_conv2:0")
-    plot_layer_output(output_conv1, image)
+    #output_conv1 = get_layer_output(layer_name="layer_conv2:0")
+    #plot_layer_output(output_conv1, image)
 
     #output_conv1 = get_layer_output(layer_name="MaxPool_1:0")
     #plot_layer_output(output_conv1, image)
@@ -242,6 +296,18 @@ if __name__ == "__main__":
 
     #output_conv1 = get_layer_output(layer_name="Softmax:0")
     #plot_layer_output(output_conv1, image)
+
+    #arr = image
+    #arr = arr[i,:]
+    #two_d = (np.reshape(arr, (28, 28))* 255).astype(np.uint8)
+
+    #getActivations(h_conv1, image)
+
+    getActivations(h_conv2, image)
+
+    #getActivations(drop1, image)
+
+    #getActivations(pool2, image)
 
 
     plt.ion()
