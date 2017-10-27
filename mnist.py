@@ -1,6 +1,5 @@
 import tensorflow as tf
 import tensorflow.contrib.slim as slim # Simplified TensorFlow
-from scipy.interpolate import spline
 import matplotlib.pyplot as plt
 import numpy as np
 import math
