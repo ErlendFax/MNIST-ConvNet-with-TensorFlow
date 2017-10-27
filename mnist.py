@@ -1,6 +1,9 @@
 import tensorflow as tf
 import numpy as np
 import math
+
+import tensorflow.contrib.slim as slim
+
 #import matplotlib.pyplot as plt
 
 #import matplotlib
@@ -28,56 +31,22 @@ def getActivations(layer,stimuli):
 
 def plotNNFilter(layer, units):
 
-	##
-
-    ##num_images = values.shape[3]
-
-    # Number of grid-cells to plot.
-    # Rounded-up, square-root of the number of filters.
-    ##num_grids = math.ceil(math.sqrt(num_images))
-
-    ##cols =  num_images / int(num_grids)
-
-    # Create figure with a grid of sub-plots.
-    ##fig, axes = plt.subplots(int(num_grids), cols)
-
-    # Plot all the filter-weights.
-    ##for i, ax in enumerate(axes.flat):
-        # Only plot the valid image-channels.
-    #    if i<num_images:
-            # Get the images for the i'th output channel.
-    #        img = values[0, :, :, i]
-
-            # Plot image.
-    #        ax.imshow(img, vmin=values_min, vmax=values_max,
-    #                  interpolation='nearest', cmap=plt.get_cmap('gray'))
-
-    ##
-
     filters = units.shape[3]
     plt.figure() # par:
     n_columns = 6
     print "STEEEEEk:", filters
 
-    #n_rows = math.ceil(math.sqrt(filters))
     n_rows = math.ceil(filters / n_columns) + 1
-    #cols =  filters / int(n_rows)
-
-
 
     for i in range(filters):
-        #print filters, cols, int(n_rows),i, "...................................."
         ax = plt.subplot(n_rows, n_columns ,i+1)
-        #plt.title('Filter ' + str(i))
         ax.tick_params(axis=u'both', which=u'both',length=0)
         ax.set_yticklabels([])
         ax.set_xticklabels([])
 
         plt.imshow(units[0,:,:,i], interpolation="nearest", cmap="gray")
 
-
     plt.suptitle(str(layer), fontsize=8, fontweight='bold')
-
     plt.show(block=False)
 
 
@@ -211,36 +180,45 @@ if __name__ == "__main__":
 
     xr = tf.reshape(x, [-1, 28, 28, 1])
 
-    # conv1
-    W_conv1 = weight_variable([4,4,1,20]) # [filter height,filter height,input depth,output depth]
-    b_conv1 = bias_variabel([20]) # [output depth]
-    h_conv1 = tf.nn.elu(conv2d(xr, W_conv1, s=1, name='layer_conv1') + b_conv1)
+    hidden_1 = slim.conv2d(xr,5,[5,5])
+    pool_1 = slim.max_pool2d(hidden_1,[2,2])
+    hidden_2 = slim.conv2d(pool_1,5,[5,5])
+    pool_2 = slim.max_pool2d(hidden_2,[2,2])
+    hidden_3 = slim.conv2d(pool_2,20,[5,5])
+    hidden_3 = slim.dropout(hidden_3,keep_prob)
+    output = slim.fully_connected(slim.flatten(hidden_3),10,activation_fn=tf.nn.softmax)
 
-    elu1 = tf.nn.elu(h_conv1)
-    pool1 = maxpool2d(elu1, 2)
+
+
+
+    # conv1
+    #W_conv1 = weight_variable([4,4,1,20]) # [filter height,filter height,input depth,output depth]
+    #b_conv1 = bias_variabel([20]) # [output depth]
+    #h_conv1 = tf.nn.elu(conv2d(xr, W_conv1, s=1, name='layer_conv1') + b_conv1)
+
+    #elu1 = tf.nn.elu(h_conv1)
+    #pool1 = maxpool2d(elu1, 2)
 
 
     # conv2
-    W_conv2 = weight_variable([5,5,20,32])
-    b_conv2 = bias_variabel([32])
-    h_conv2 = tf.nn.elu(conv2d(h_conv1, W_conv2, s=1,name='layer_conv2') + b_conv2)
+    #W_conv2 = weight_variable([5,5,20,32])
+    #b_conv2 = bias_variabel([32])
+    #h_conv2 = tf.nn.elu(conv2d(h_conv1, W_conv2, s=1,name='layer_conv2') + b_conv2)
 
     # drop1
-    drop1 = tf.nn.dropout(h_conv2, keep_prob)
+    #drop1 = tf.nn.dropout(h_conv2, keep_prob)
 
     # elu1
-    elu1 = tf.nn.elu(drop1)
+    #elu1 = tf.nn.elu(drop1)
 
-    pool2 = maxpool2d(elu1, 2)
+    #pool2 = maxpool2d(elu1, 2)
 
-    fc1 = tf.contrib.layers.flatten(pool2)
-    den = tf.layers.dense(fc1, 1024)
+    #fc1 = tf.contrib.layers.flatten(pool2)
+    #den = tf.layers.dense(fc1, 1024)
 
-    elu2 = tf.nn.elu(den)
+    #elu2 = tf.nn.elu(den)
 
-    output = tf.layers.dense(elu2, 10) # Output
-
-    print "OUTPUT: ", output
+    #output = tf.layers.dense(elu2, 10) # Output
 
     prediction = tf.nn.softmax(output) # Format for loss check
 
@@ -252,8 +230,6 @@ if __name__ == "__main__":
     accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
 
     sess.run(tf.global_variables_initializer())
-
-    #plot_images(mnist.test.images[0], cls_true=mnist.test.labels[0], smooth=False) # Print input data
 
     plt.ioff()
     #plot_img(mnist.test.images[0]) # Print input data
@@ -303,13 +279,13 @@ if __name__ == "__main__":
 
     #getActivations(h_conv1, image)
 
-    #getActivations(h_conv2, image)
+    getActivations(hidden_2, image)
 
     #getActivations(drop1, image)
 
     #getActivations(pool2, image)
 
-    getActivations(output, image)
+    #getActivations(output, image)
 
     plt.ion()
     plt.show()
