@@ -24,6 +24,8 @@ Fully connected layer - 10 outputs (Softmax)
 
 ---
 
+### Layer outputs
+
 <img src="https://github.com/ErlendFax/MNIST-ConvNet-with-TensorFlow/blob/master/Img/figure_1.png" width="50%" height="50%">
 
 <img src="https://github.com/ErlendFax/MNIST-ConvNet-with-TensorFlow/blob/master/Img/figure_4.png" width="50%" height="50%">
@@ -42,6 +44,7 @@ Fully connected layer - 10 outputs (Softmax)
 <img src="https://github.com/ErlendFax/MNIST-ConvNet-with-TensorFlow/blob/master/Img/figure_2.png" width="50%" height="50%">
 
 <img src="https://github.com/ErlendFax/MNIST-ConvNet-with-TensorFlow/blob/master/Img/figure_3.png" width="50%" height="50%">
+
 ---
 
 #### Few epochs and similar digits can result in bigger uncertainty:
