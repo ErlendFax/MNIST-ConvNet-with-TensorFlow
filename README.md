@@ -1,7 +1,9 @@
 # MNIST with TensorFlow-Slim
 
 A Convolutional neural network for recognizing hand written digits. The script uses Matplotlib for visualizing layers, output, loss and accuracy.
+
 ---
+
 ### Model:
 
 Input - 28 x 28
@@ -41,5 +43,6 @@ Fully connected layer - 10 outputs (Softmax)
 
 <img src="https://github.com/ErlendFax/MNIST-ConvNet-with-TensorFlow/blob/master/Img/figure_3.png" width="50%" height="50%">
 ---
+
 #### Few epochs and similar digits can result in bigger uncertainty:
 <img src="https://github.com/ErlendFax/MNIST-ConvNet-with-TensorFlow/blob/master/Img/figure_10.png" width="50%" height="50%">
