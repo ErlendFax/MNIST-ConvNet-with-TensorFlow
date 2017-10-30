@@ -24,7 +24,7 @@ Fully connected layer - 10 outputs (Softmax)
 
 ---
 
-### Layer outputs
+### Layer outputs:
 
 <img src="https://github.com/ErlendFax/MNIST-ConvNet-with-TensorFlow/blob/master/Img/figure_1.png" width="50%" height="50%">
 
