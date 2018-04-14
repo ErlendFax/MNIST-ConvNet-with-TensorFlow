@@ -7,6 +7,10 @@ import math
 from tensorflow.examples.tutorials.mnist import input_data
 mnist = input_data.read_data_sets('MNIST_data', one_hot=True)
 
+import matplotlib.colors as colors
+color_list = list(colors.cnames.values())
+
+
 def outPossibilities(layer,stimuli):
     units = sess.run(layer,feed_dict={x:np.reshape(stimuli,[1,784],order='F'),keep_prob:1.0})
     plt.figure()
@@ -49,15 +53,15 @@ def plot_img(image, label):
     plt.suptitle("Label: " + str(label.tolist().index(1)),fontsize=16, fontweight='bold')
     plt.show(block=False)
 
-# TODO: legg til *args 
-def plotGraph(lossList, accList):
+
+def plotGraph(title, *args):
     plt.figure()
-    plt.plot(lossList, color='red')
-    plt.suptitle("Loss", fontsize=16, fontweight='bold')
-    plt.figure()
-    plt.plot(accList, color='green')
-    plt.suptitle("Accuracy", fontsize=16, fontweight='bold')
-    plt.show(block=False)
+    plt.suptitle(title, fontsize=18, fontweight='bold')
+    for i, list in enumerate(args):
+        plt.plot(list[0], color=color_list[i], label=list[1], linewidth=2)
+    plt.legend()
+    plt.show()
+
 
 if __name__ == "__main__":
 
@@ -73,13 +77,14 @@ if __name__ == "__main__":
 
     xr = tf.reshape(x, [-1, 28, 28, 1])
 
-    hidden_1 = slim.conv2d(xr,24,[2,2], activation_fn=tf.nn.elu)
-    pool_1 = slim.max_pool2d(hidden_1,[2,2])
-    hidden_2 = slim.conv2d(pool_1,200,[4,4], activation_fn=tf.nn.elu)
-    pool_2 = slim.max_pool2d(hidden_2,[2,2])
-    hidden_3 = slim.conv2d(pool_2,20,[4,4], activation_fn=tf.nn.elu)
-    hidden_3 = slim.dropout(hidden_3,keep_prob)
-    output = slim.fully_connected(slim.flatten(hidden_3),10, activation_fn=tf.nn.softmax)
+    hidden_1 = slim.conv2d(xr,24,[1,1], activation_fn=tf.nn.elu, normalizer_fn=slim.batch_norm)
+    hidden_1_drop = slim.dropout(hidden_1,keep_prob)
+    pool_1 = slim.max_pool2d(hidden_1_drop,[2,2])
+    hidden_2_drop = slim.conv2d(pool_1,200,[4,4], activation_fn=tf.nn.elu, normalizer_fn=slim.batch_norm)
+    pool_2 = slim.max_pool2d(hidden_2_drop,[2,2])
+    hidden_3 = slim.conv2d(pool_2,20,[4,4], activation_fn=tf.nn.elu, normalizer_fn=slim.batch_norm)
+    hidden_3_drop = slim.dropout(hidden_3,keep_prob)
+    output = slim.fully_connected(slim.flatten(hidden_3_drop),10, activation_fn=tf.nn.softmax, normalizer_fn=slim.batch_norm)
 
     prediction = tf.nn.softmax(output) # Format for loss check
 
@@ -92,7 +97,7 @@ if __name__ == "__main__":
 
     sess.run(tf.global_variables_initializer())
 
-    plot_img(image_for_display, label_for_display) # Plot input data
+    #plot_img(image_for_display, label_for_display) # Plot input data
 
     print "-----------------------------------"
 
@@ -112,12 +117,9 @@ if __name__ == "__main__":
             batch_xs, batch_ys = mnist.train.next_batch(batch_size)
             batch_xs -= 0.5
 
-            _, loss, acc = sess.run([train, loss_op, accuracy], feed_dict={x: batch_xs, y: batch_ys, keep_prob: 0.9})
-            #loss_list += [loss]
-            #acc_list += [acc]
+            _, loss, acc = sess.run([train, loss_op, accuracy], feed_dict={x: batch_xs, y: batch_ys, keep_prob: 0.5})
             acc_list.append(acc)
             loss_list.append(loss)
-
 
             if (j % 25 == 0):
                 print 'Epoch: {0:3}/{1} Sample nr.: {2:5}/{3} Loss: {4:.3f} Acc.: {5:.3f}'.format(i+1, epochs, j*batch_size, samples, loss, acc)
@@ -127,8 +129,6 @@ if __name__ == "__main__":
             batch_xs_val -= 0.5
 
             loss_val, acc_val = sess.run([loss_op, accuracy], feed_dict={x: batch_xs_val, y: batch_ys_val, keep_prob: 1.0})
-            #loss_val_list += [loss_val]
-            #acc_val_list += [acc_val]
             loss_val_list.append(loss_val)
             acc_val_list.append(acc_val)
 
@@ -138,11 +138,12 @@ if __name__ == "__main__":
 
     print "\nTraining finished!\n-----------------------------------"
 
-    final_acc = sess.run(accuracy, feed_dict={x: mnist.test.images[:256],y: mnist.test.labels[:256], keep_prob: 1.0})
+
+    final_acc = sess.run(accuracy, feed_dict={x: mnist.test.images[:501],y: mnist.test.labels[:501], keep_prob: 1.0})
     print "Testing Accuracy:", final_acc
 
-    plotGraph(loss_val_list, acc_val_list)
-    plotGraph(loss_list, acc_list)
+    plotGraph('Loss and Accuracy', [loss_list, 'Loss'], [acc_list, 'Acc.'])
+    plotGraph('Validation - Loss and Accuracy', [loss_val_list, 'Val. loss'], [acc_val_list, 'Val. acc.'])
     getActivations(hidden_1, image_for_display)
     getActivations(pool_1, image_for_display)
     getActivations(hidden_2, image_for_display)
