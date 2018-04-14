@@ -78,12 +78,13 @@ if __name__ == "__main__":
     xr = tf.reshape(x, [-1, 28, 28, 1])
 
     hidden_1 = slim.conv2d(xr,24,[1,1], activation_fn=tf.nn.elu, normalizer_fn=slim.batch_norm)
-    hidden_1_drop = slim.dropout(hidden_1,keep_prob)
+    hidden_1_drop = slim.dropout(hidden_1, keep_prob)
     pool_1 = slim.max_pool2d(hidden_1_drop,[2,2])
-    hidden_2_drop = slim.conv2d(pool_1,200,[4,4], activation_fn=tf.nn.elu, normalizer_fn=slim.batch_norm)
+    hidden_2 = slim.conv2d(pool_1,200,[4,4], activation_fn=tf.nn.elu, normalizer_fn=slim.batch_norm)
+    hidden_2_drop = slim.dropout(hidden_2, keep_prob)
     pool_2 = slim.max_pool2d(hidden_2_drop,[2,2])
     hidden_3 = slim.conv2d(pool_2,20,[4,4], activation_fn=tf.nn.elu, normalizer_fn=slim.batch_norm)
-    hidden_3_drop = slim.dropout(hidden_3,keep_prob)
+    hidden_3_drop = slim.dropout(hidden_3, keep_prob)
     output = slim.fully_connected(slim.flatten(hidden_3_drop),10, activation_fn=tf.nn.softmax, normalizer_fn=slim.batch_norm)
 
     prediction = tf.nn.softmax(output) # Format for loss check
