@@ -4,23 +4,58 @@ import matplotlib.pyplot as plt
 import numpy as np
 import math
 
+from numpy import arange,array,ones
+from scipy import stats
+
 from tensorflow.examples.tutorials.mnist import input_data
 mnist = input_data.read_data_sets('MNIST_data', one_hot=True)
 
 import matplotlib.colors as colors
 color_list = list(colors.cnames.values())
 
-
+"""
 def outPossibilities(layer,stimuli):
     units = sess.run(layer,feed_dict={x:np.reshape(stimuli,[1,784],order='F'),keep_prob:1.0})
     plt.figure()
     g = np.arange(10)
     plt.bar(g, height=np.ravel(units), width=1)
     plt.xticks(g+.5, range(10));
-    plt.suptitle("Output", fontsize=16, fontweight='bold')
+    plt.ylim(0, 1.1)
+    plt.suptitle("Output: " + str(np.ravel(units)), fontsize=12, fontweight='bold')
     plt.xlabel("Written number")
     plt.ylabel("Possibility")
+    plt.grid()
     plt.show(block=False)
+"""
+
+def outPossibilities(layer, stimuli):
+    N = len(stimuli)
+    units = sess.run(layer,feed_dict={x:np.reshape(stimuli,[1,784],order='F'),keep_prob:1.0})
+    ind = np.arange(N) # the x locations for the groups
+    width = 0.35       # the width of the bars
+
+    lol = np.ravel(units)
+
+    for l in lol:
+        print l
+
+    fig, ax = plt.subplots()
+    bars = ax.bar(N, height=np.ravel(units), width=1)
+
+# add some text for labels, title and axes ticks
+    ax.set_ylabel('Probabillaty')
+    ax.set_title('Output probabilaty')
+    ax.set_xticks(ind + 0.25)
+    ax.set_xticklabels(('0', '1', '2', '3', '4', '5', '6', '7', '8', '8', '9'))
+
+
+    for bar in bars:
+        height = bar.get_height()
+        ax.text(bar.get_x() + bar.get_width()/2., 1.05*height,
+                '%d' % int(height),
+                ha='center', va='bottom')
+
+    plt.show()
 
 
 def getActivations(layer,stimuli):
@@ -54,19 +89,28 @@ def plot_img(image, label):
     plt.show(block=False)
 
 
-def plotGraph(title, *args):
+def plotGraph(title, linreg=False, *args):
+
     plt.figure()
     plt.suptitle(title, fontsize=18, fontweight='bold')
     for i, list in enumerate(args):
-        plt.plot(list[0], color=color_list[i], label=list[1], linewidth=2)
+        if linreg:
+            x = arange(0,len(list[0]))
+            slope, intercept, r_value, p_value, std_err = stats.linregress(x,list[0])
+            line = slope * x + intercept
+            plt.plot(list[0], color=color_list[i], label=list[1], linewidth=2)
+            plt.plot(line, color=color_list[i+10], label='Linear regression', linewidth=2)
+        else:
+            plt.plot(list[0], color=color_list[i], label=list[1], linewidth=2)
+
     plt.legend()
     plt.show()
 
 
 if __name__ == "__main__":
 
-    image_for_display = mnist.test.images[3]
-    label_for_display = mnist.test.labels[3]
+    image_for_display = mnist.test.images[1]
+    label_for_display = mnist.test.labels[1]
 
     tf.reset_default_graph()
     sess = tf.Session()
@@ -77,15 +121,15 @@ if __name__ == "__main__":
 
     xr = tf.reshape(x, [-1, 28, 28, 1])
 
-    hidden_1 = slim.conv2d(xr,24,[1,1], activation_fn=tf.nn.elu, normalizer_fn=slim.batch_norm)
+    hidden_1 = slim.conv2d(xr, 24, [1,1], activation_fn=tf.nn.elu, normalizer_fn=slim.batch_norm)
     hidden_1_drop = slim.dropout(hidden_1, keep_prob)
-    pool_1 = slim.max_pool2d(hidden_1_drop,[2,2])
-    hidden_2 = slim.conv2d(pool_1,200,[4,4], activation_fn=tf.nn.elu, normalizer_fn=slim.batch_norm)
+    pool_1 = slim.max_pool2d(hidden_1, [2,2])
+    hidden_2 = slim.conv2d(pool_1, 200, [4,4], activation_fn=tf.nn.elu, normalizer_fn=slim.batch_norm)
     hidden_2_drop = slim.dropout(hidden_2, keep_prob)
-    pool_2 = slim.max_pool2d(hidden_2_drop,[2,2])
-    hidden_3 = slim.conv2d(pool_2,20,[4,4], activation_fn=tf.nn.elu, normalizer_fn=slim.batch_norm)
+    pool_2 = slim.max_pool2d(hidden_2_drop ,[2,2])
+    hidden_3 = slim.conv2d(pool_2, 20, [4,4], activation_fn=tf.nn.elu, normalizer_fn=slim.batch_norm)
     hidden_3_drop = slim.dropout(hidden_3, keep_prob)
-    output = slim.fully_connected(slim.flatten(hidden_3_drop),10, activation_fn=tf.nn.softmax, normalizer_fn=slim.batch_norm)
+    output = slim.fully_connected(slim.flatten(hidden_3_drop), 10, activation_fn=tf.nn.softmax)
 
     prediction = tf.nn.softmax(output) # Format for loss check
 
@@ -102,9 +146,9 @@ if __name__ == "__main__":
 
     print "-----------------------------------"
 
-    samples = 55000
+    samples = 5500#0
     batch_size = 100
-    epochs = 5
+    epochs = 1
     validation_samples = 5000
 
     loss_val_list = []
@@ -143,13 +187,13 @@ if __name__ == "__main__":
     final_acc = sess.run(accuracy, feed_dict={x: mnist.test.images[:501],y: mnist.test.labels[:501], keep_prob: 1.0})
     print "Testing Accuracy:", final_acc
 
-    plotGraph('Loss and Accuracy', [loss_list, 'Loss'], [acc_list, 'Acc.'])
-    plotGraph('Validation - Loss and Accuracy', [loss_val_list, 'Val. loss'], [acc_val_list, 'Val. acc.'])
-    getActivations(hidden_1, image_for_display)
-    getActivations(pool_1, image_for_display)
-    getActivations(hidden_2, image_for_display)
-    getActivations(pool_2, image_for_display)
-    getActivations(hidden_3, image_for_display)
+    #plotGraph('Loss and Accuracy', False,[loss_list, 'Loss'], [acc_list, 'Acc.'])
+    #plotGraph('Validation - Loss and Accuracy', True, [loss_val_list, 'Val. loss'], [acc_val_list, 'Val. acc.'])
+    #getActivations(hidden_1, image_for_display)
+    #getActivations(pool_1, image_for_display)
+    #getActivations(hidden_2, image_for_display)
+    #getActivations(pool_2, image_for_display)
+    #getActivations(hidden_3, image_for_display)
     outPossibilities(output, image_for_display)
 
     plt.ion()
