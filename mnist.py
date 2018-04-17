@@ -15,7 +15,7 @@ color_list = list(colors.cnames.values())
 
 samples = 55000
 batch_size = 100
-epochs = 5
+epochs = 1
 validation_samples = 5000
 
 
@@ -58,6 +58,7 @@ def plotNNFilter(layer, units):
 
 def plot_img(image, label):
     two_d = (np.reshape(image, (28, 28))* 255).astype(np.uint8)
+    plt.figure()
     plt.imshow(two_d, interpolation='nearest' , cmap=plt.get_cmap('gray'))
     plt.xticks([])
     plt.yticks([])
@@ -66,7 +67,6 @@ def plot_img(image, label):
 
 
 def plotGraph(title, linreg=False, *args):
-
     plt.figure()
     plt.suptitle(title, fontsize=18, fontweight='bold')
     for i, list in enumerate(args):
@@ -85,8 +85,8 @@ def plotGraph(title, linreg=False, *args):
 
 if __name__ == "__main__":
 
-    image_for_display = mnist.test.images[1]
-    label_for_display = mnist.test.labels[1]
+    image_for_display = mnist.test.images[0]
+    label_for_display = mnist.test.labels[0]
 
     tf.reset_default_graph()
     sess = tf.Session()
@@ -102,20 +102,20 @@ if __name__ == "__main__":
         image = tf.image.per_image_standardization(image)
 
 
-    hidden_1 = slim.conv2d(xr, 24, [1,1], activation_fn=tf.nn.elu, normalizer_fn=slim.batch_norm)
+    hidden_1 = slim.conv2d(xr, 24, [2,2], activation_fn=tf.nn.elu, normalizer_fn=slim.batch_norm)
     hidden_1_drop = slim.dropout(hidden_1, keep_prob)
     pool_1 = slim.max_pool2d(hidden_1, [2,2])
-    hidden_2 = slim.conv2d(pool_1, 200, [4,4], activation_fn=tf.nn.elu, normalizer_fn=slim.batch_norm)
+    hidden_2 = slim.conv2d(pool_1, 200, [2,2], activation_fn=tf.nn.elu, normalizer_fn=slim.batch_norm)
     hidden_2_drop = slim.dropout(hidden_2, keep_prob)
     pool_2 = slim.max_pool2d(hidden_2_drop ,[2,2])
-    hidden_3 = slim.conv2d(pool_2, 20, [4,4], activation_fn=tf.nn.elu) #normalizer_fn=slim.batch_norm
+    hidden_3 = slim.conv2d(pool_2, 20, [4,4], activation_fn=tf.nn.relu) #normalizer_fn=slim.batch_norm
     hidden_3_drop = slim.dropout(hidden_3, keep_prob)
     output = slim.fully_connected(slim.flatten(hidden_3_drop), 10, activation_fn=tf.nn.softmax)
 
     prediction = tf.nn.softmax(output) # Format for loss check
 
     loss_op = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=output, labels=y))
-    optimizer = tf.train.AdamOptimizer(learning_rate=0.001)
+    optimizer = tf.train.AdamOptimizer(learning_rate=0.0003)
     train = optimizer.minimize(loss_op)
 
     correct_pred = tf.equal(tf.argmax(prediction, 1), tf.argmax(y, 1))
@@ -140,12 +140,11 @@ if __name__ == "__main__":
             acc_list.append(acc)
             loss_list.append(loss)
 
-            if (j % 25 == 0):
+            if (j % 25 == 0 or j*batch_size == samples-1):
                 print 'Epoch: {0:3}/{1} Sample nr.: {2:5}/{3} Loss: {4:.3f} Acc.: {5:.3f}'.format(i+1, epochs, j*batch_size, samples, loss, acc)
 
         for k in range(validation_samples/epochs/batch_size):
             batch_xs_val, batch_ys_val = mnist.validation.next_batch(batch_size)
-            #batch_xs_val -= 0.5
 
             loss_val, acc_val = sess.run([loss_op, accuracy], feed_dict={x: batch_xs_val, y: batch_ys_val, keep_prob: 1.0})
             loss_val_list.append(loss_val)
@@ -157,24 +156,24 @@ if __name__ == "__main__":
 
     print "\nTraining finished!\n-----------------------------------"
 
-    final_acc = sess.run(accuracy, feed_dict={x: mnist.test.images[:501],y: mnist.test.labels[:501], keep_prob: 1.0})
+    final_acc = sess.run(accuracy, feed_dict={x: mnist.test.images[1:1001],y: mnist.test.labels[1:1001], keep_prob: 1.0})
     print "Testing Accuracy:", final_acc
 
     plotGraph('Loss and Accuracy', False,[loss_list, 'Loss'], [acc_list, 'Acc.'])
     plotGraph('Validation - Loss and Accuracy', True, [loss_val_list, 'Val. loss'], [acc_val_list, 'Val. acc.'])
 
-    print "\nFianl acc. estimation and graph plot finished!\n-----------------------------------"
+    print "-----------------------------------"
 
-    print 'Visualize layers and predicting class of: '
-    print label_for_display
-    plot_img(image_for_display, label_for_display) # Plot input data
+    print 'Visualize layers and predict class of selected image.'
+    print "Label: ", label_for_display
+    plot_img(image_for_display, label_for_display)
     getActivations(hidden_1, image_for_display)
     getActivations(pool_1, image_for_display)
     getActivations(hidden_2, image_for_display)
     getActivations(pool_2, image_for_display)
     getActivations(hidden_3, image_for_display)
     output_prediction = outPossibilities(output, image_for_display)
-    print ["{0:0.5f}".format(i) for i in output_prediction]
+    print "Pred.: ", list(np.around(np.array(output_prediction), 3))
 
     plt.ion()
     plt.show()
