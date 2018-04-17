@@ -13,50 +13,26 @@ mnist = input_data.read_data_sets('MNIST_data', one_hot=True)
 import matplotlib.colors as colors
 color_list = list(colors.cnames.values())
 
-"""
+samples = 55000
+batch_size = 100
+epochs = 5
+validation_samples = 5000
+
+
+
 def outPossibilities(layer,stimuli):
     units = sess.run(layer,feed_dict={x:np.reshape(stimuli,[1,784],order='F'),keep_prob:1.0})
     plt.figure()
     g = np.arange(10)
     plt.bar(g, height=np.ravel(units), width=1)
-    plt.xticks(g+.5, range(10));
+    plt.xticks(g, range(10));
     plt.ylim(0, 1.1)
-    plt.suptitle("Output: " + str(np.ravel(units)), fontsize=12, fontweight='bold')
+    plt.suptitle("Output", fontsize=12, fontweight='bold')
     plt.xlabel("Written number")
     plt.ylabel("Possibility")
     plt.grid()
     plt.show(block=False)
-"""
-
-def outPossibilities(layer, stimuli):
-    N = len(stimuli)
-    units = sess.run(layer,feed_dict={x:np.reshape(stimuli,[1,784],order='F'),keep_prob:1.0})
-    ind = np.arange(N) # the x locations for the groups
-    width = 0.35       # the width of the bars
-
-    lol = np.ravel(units)
-
-    for l in lol:
-        print l
-
-    fig, ax = plt.subplots()
-    bars = ax.bar(N, height=np.ravel(units), width=1)
-
-# add some text for labels, title and axes ticks
-    ax.set_ylabel('Probabillaty')
-    ax.set_title('Output probabilaty')
-    ax.set_xticks(ind + 0.25)
-    ax.set_xticklabels(('0', '1', '2', '3', '4', '5', '6', '7', '8', '8', '9'))
-
-
-    for bar in bars:
-        height = bar.get_height()
-        ax.text(bar.get_x() + bar.get_width()/2., 1.05*height,
-                '%d' % int(height),
-                ha='center', va='bottom')
-
-    plt.show()
-
+    return np.ravel(units)
 
 def getActivations(layer,stimuli):
     units = sess.run(layer,feed_dict={x:np.reshape(stimuli,[1,784],order='F'),keep_prob:1.0})
@@ -104,7 +80,7 @@ def plotGraph(title, linreg=False, *args):
             plt.plot(list[0], color=color_list[i], label=list[1], linewidth=2)
 
     plt.legend()
-    plt.show()
+    plt.show(block=False)
 
 
 if __name__ == "__main__":
@@ -121,13 +97,18 @@ if __name__ == "__main__":
 
     xr = tf.reshape(x, [-1, 28, 28, 1])
 
+    for i_image in range(batch_size):
+        image = xr[i_image,:,:,:]
+        image = tf.image.per_image_standardization(image)
+
+
     hidden_1 = slim.conv2d(xr, 24, [1,1], activation_fn=tf.nn.elu, normalizer_fn=slim.batch_norm)
     hidden_1_drop = slim.dropout(hidden_1, keep_prob)
     pool_1 = slim.max_pool2d(hidden_1, [2,2])
     hidden_2 = slim.conv2d(pool_1, 200, [4,4], activation_fn=tf.nn.elu, normalizer_fn=slim.batch_norm)
     hidden_2_drop = slim.dropout(hidden_2, keep_prob)
     pool_2 = slim.max_pool2d(hidden_2_drop ,[2,2])
-    hidden_3 = slim.conv2d(pool_2, 20, [4,4], activation_fn=tf.nn.elu, normalizer_fn=slim.batch_norm)
+    hidden_3 = slim.conv2d(pool_2, 20, [4,4], activation_fn=tf.nn.elu) #normalizer_fn=slim.batch_norm
     hidden_3_drop = slim.dropout(hidden_3, keep_prob)
     output = slim.fully_connected(slim.flatten(hidden_3_drop), 10, activation_fn=tf.nn.softmax)
 
@@ -142,14 +123,7 @@ if __name__ == "__main__":
 
     sess.run(tf.global_variables_initializer())
 
-    #plot_img(image_for_display, label_for_display) # Plot input data
-
     print "-----------------------------------"
-
-    samples = 5500#0
-    batch_size = 100
-    epochs = 1
-    validation_samples = 5000
 
     loss_val_list = []
     acc_val_list = []
@@ -159,8 +133,8 @@ if __name__ == "__main__":
 
     for i in range(epochs):
         for j in range(samples/batch_size):
-            batch_xs, batch_ys = mnist.train.next_batch(batch_size)
-            batch_xs -= 0.5
+
+            batch_xs, batch_ys = mnist.train.next_batch(batch_size) #(100,784)
 
             _, loss, acc = sess.run([train, loss_op, accuracy], feed_dict={x: batch_xs, y: batch_ys, keep_prob: 0.5})
             acc_list.append(acc)
@@ -171,7 +145,7 @@ if __name__ == "__main__":
 
         for k in range(validation_samples/epochs/batch_size):
             batch_xs_val, batch_ys_val = mnist.validation.next_batch(batch_size)
-            batch_xs_val -= 0.5
+            #batch_xs_val -= 0.5
 
             loss_val, acc_val = sess.run([loss_op, accuracy], feed_dict={x: batch_xs_val, y: batch_ys_val, keep_prob: 1.0})
             loss_val_list.append(loss_val)
@@ -183,18 +157,24 @@ if __name__ == "__main__":
 
     print "\nTraining finished!\n-----------------------------------"
 
-
     final_acc = sess.run(accuracy, feed_dict={x: mnist.test.images[:501],y: mnist.test.labels[:501], keep_prob: 1.0})
     print "Testing Accuracy:", final_acc
 
-    #plotGraph('Loss and Accuracy', False,[loss_list, 'Loss'], [acc_list, 'Acc.'])
-    #plotGraph('Validation - Loss and Accuracy', True, [loss_val_list, 'Val. loss'], [acc_val_list, 'Val. acc.'])
-    #getActivations(hidden_1, image_for_display)
-    #getActivations(pool_1, image_for_display)
-    #getActivations(hidden_2, image_for_display)
-    #getActivations(pool_2, image_for_display)
-    #getActivations(hidden_3, image_for_display)
-    outPossibilities(output, image_for_display)
+    plotGraph('Loss and Accuracy', False,[loss_list, 'Loss'], [acc_list, 'Acc.'])
+    plotGraph('Validation - Loss and Accuracy', True, [loss_val_list, 'Val. loss'], [acc_val_list, 'Val. acc.'])
+
+    print "\nFianl acc. estimation and graph plot finished!\n-----------------------------------"
+
+    print 'Visualize layers and predicting class of: '
+    print label_for_display
+    plot_img(image_for_display, label_for_display) # Plot input data
+    getActivations(hidden_1, image_for_display)
+    getActivations(pool_1, image_for_display)
+    getActivations(hidden_2, image_for_display)
+    getActivations(pool_2, image_for_display)
+    getActivations(hidden_3, image_for_display)
+    output_prediction = outPossibilities(output, image_for_display)
+    print ["{0:0.5f}".format(i) for i in output_prediction]
 
     plt.ion()
     plt.show()
